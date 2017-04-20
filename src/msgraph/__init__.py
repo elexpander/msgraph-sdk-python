@@ -234,6 +234,7 @@ from .request.drive_item_content_request import DriveItemContentRequest, DriveIt
 from .request.thumbnail_content_request import ThumbnailContentRequest, ThumbnailContentRequestBuilder
 from .request.graph_service_client import GraphServiceClient
 from .http_provider import HttpProvider
+from .auth_provider import AuthProvider
 from .extensions.graph_client_helper import *
 from .extensions import *
 import sys

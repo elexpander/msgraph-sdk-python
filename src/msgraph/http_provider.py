@@ -32,6 +32,24 @@ class HttpProvider(HttpProviderBase):
         """
         session = requests.Session()
 
+        print('debug - http_provider:send')
+        print('method:')
+        print(method)
+        print()
+        print('url:')
+        print(url)
+        print()
+        print('data:')
+        print(data)
+        print()
+        print('headers:')
+        print(headers)
+        print()
+        print('content:')
+        print(content)
+        print()
+
+
         if path:
             with open(path, mode='rb') as f:
                 request = requests.Request(method,

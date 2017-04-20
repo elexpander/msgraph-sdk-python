@@ -110,8 +110,8 @@ class RequestBase(object):
         """
         self._client.auth_provider.authenticate_request(self)
 
-        self.append_option(HeaderOption("X-RequestStats",
-                                        "SDK-Version=python-v"+__version__))
+        self.append_option(HeaderOption("Content-Type", "application/json"))
+        self.append_option(HeaderOption("X-RequestStats", "SDK-Version=python-v"+__version__))
 
         if self.content_type:
             self.append_option(HeaderOption("Content-Type", self.content_type))
@@ -175,13 +175,13 @@ class RequestBase(object):
                 that are used to sort the order of items in the response.
         """
         if expand:
-            self.append_option(QueryOption("expand", expand))
+            self.append_option(QueryOption("$expand", expand))
 
         if select:
-            self.append_option(QueryOption("select", select))
+            self.append_option(QueryOption("$select", select))
 
         if top:
-            self.append_option(QueryOption("top", top))
+            self.append_option(QueryOption("$top", top))
 
         if order_by:
-            self.append_option(QueryOption("orderby", order_by))
+            self.append_option(QueryOption("$orderby", order_by))
