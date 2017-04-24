@@ -235,6 +235,9 @@ from .request.thumbnail_content_request import ThumbnailContentRequest, Thumbnai
 from .request.graph_service_client import GraphServiceClient
 from .http_provider import HttpProvider
 from .auth_provider import AuthProvider
+from .options import QueryOption
+from .options import HeaderOption
+from .error import GraphError
 from .extensions.graph_client_helper import *
 from .extensions import *
 import sys

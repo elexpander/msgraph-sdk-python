@@ -43,7 +43,7 @@ class User(DirectoryObject):
                 The assignedLicenses
         """
         if "assignedLicenses" in self._prop_dict:
-            return AssignedLicensesCollectionPage(self._prop_dict["assignedLicenses"])
+            return self._prop_dict["assignedLicenses"]
         else:
             return None
 
@@ -56,7 +56,7 @@ class User(DirectoryObject):
                 The assignedPlans
         """
         if "assignedPlans" in self._prop_dict:
-            return AssignedPlansCollectionPage(self._prop_dict["assignedPlans"])
+            return self._prop_dict["assignedPlans"]
         else:
             return None
 

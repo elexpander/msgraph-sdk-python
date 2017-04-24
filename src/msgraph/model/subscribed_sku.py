@@ -81,7 +81,7 @@ class SubscribedSku(Entity):
                 The servicePlans
         """
         if "servicePlans" in self._prop_dict:
-            return ServicePlansCollectionPage(self._prop_dict["servicePlans"])
+            return self._prop_dict["servicePlans"]
         else:
             return None
 
