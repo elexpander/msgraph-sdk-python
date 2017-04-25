@@ -7,7 +7,8 @@
 
 from __future__ import unicode_literals
 from ..model.password_profile import PasswordProfile
-from ..model.directory_object import DirectoryObject
+from ..request.assigned_license_collection import AssignedLicenseCollectionPage
+from ..request.assigned_plan_collection import AssignedPlanCollectionPage
 from datetime import datetime
 
 from .directory_object import DirectoryObject
@@ -43,7 +44,7 @@ class User(DirectoryObject):
                 The assignedLicenses
         """
         if "assignedLicenses" in self._prop_dict:
-            return self._prop_dict["assignedLicenses"]
+            return AssignedLicenseCollectionPage(self._prop_dict["assignedLicenses"])
         else:
             return None
 
@@ -56,7 +57,7 @@ class User(DirectoryObject):
                 The assignedPlans
         """
         if "assignedPlans" in self._prop_dict:
-            return self._prop_dict["assignedPlans"]
+            return AssignedPlanCollectionPage(self._prop_dict["assignedPlans"])
         else:
             return None
 

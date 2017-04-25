@@ -22,3 +22,20 @@ class GraphObjectBase(object):
                 serialized[prop] = self._prop_dict[prop]
 
         return serialized
+
+    def __str__(self):
+        """Returns a string representation of the object
+        including object type and all properties
+        
+        Returns:
+            string
+        """
+        output = '<MSGRAPH Object: ' + type(self).__name__ + ' {'
+        serialized = self.to_dict()
+        for key in serialized:
+            if type(serialized[key]).__name__ == 'str':
+                output = output + key + ': ' + serialized[key] + ', '
+            else:
+                output = output + key + ': <' + type(serialized[key]).__name__ + '>, '
+        output = output + '}>'
+        return output
