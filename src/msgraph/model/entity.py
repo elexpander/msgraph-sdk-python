@@ -6,8 +6,8 @@
 """
 
 from __future__ import unicode_literals
-
 from ..graph_object_base import GraphObjectBase
+
 
 class Entity(GraphObjectBase):
     def __init__(self, prop_dict={}):

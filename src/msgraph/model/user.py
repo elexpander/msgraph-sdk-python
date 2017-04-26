@@ -7,11 +7,11 @@
 
 from __future__ import unicode_literals
 from ..model.password_profile import PasswordProfile
-from ..request.assigned_license_collection import AssignedLicenseCollectionPage
-from ..request.assigned_plan_collection import AssignedPlanCollectionPage
+from ..request.assigned_license_collection import AssignedLicenseCollection
+from ..request.assigned_plan_collection import AssignedPlanCollection
 from datetime import datetime
-
 from .directory_object import DirectoryObject
+
 
 class User(DirectoryObject):
     def __init__(self, prop_dict={}):
@@ -44,7 +44,7 @@ class User(DirectoryObject):
                 The assignedLicenses
         """
         if "assignedLicenses" in self._prop_dict:
-            return AssignedLicenseCollectionPage(self._prop_dict["assignedLicenses"])
+            return AssignedLicenseCollection(self._prop_dict["assignedLicenses"])
         else:
             return None
 
@@ -57,7 +57,7 @@ class User(DirectoryObject):
                 The assignedPlans
         """
         if "assignedPlans" in self._prop_dict:
-            return AssignedPlanCollectionPage(self._prop_dict["assignedPlans"])
+            return AssignedPlanCollection(self._prop_dict["assignedPlans"])
         else:
             return None
 

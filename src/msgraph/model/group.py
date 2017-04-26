@@ -6,10 +6,9 @@
 """
 
 from __future__ import unicode_literals
-from ..model.directory_object import DirectoryObject
 from datetime import datetime
-
 from .directory_object import DirectoryObject
+
 
 class Group(DirectoryObject):
     def __init__(self, prop_dict={}):

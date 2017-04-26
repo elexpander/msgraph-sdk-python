@@ -6,8 +6,8 @@
 """
 
 from __future__ import unicode_literals
-
 from .entity import Entity
+
 
 class DirectoryObject(Entity):
     def __init__(self, prop_dict={}):

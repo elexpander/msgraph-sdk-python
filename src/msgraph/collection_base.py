@@ -44,13 +44,16 @@ class CollectionResponseBase(object):
         pass
 
 
-class CollectionPageBase(object):
-    
+class CollectionBase(object):
+
     def __init__(self, prop_list = []):
         self._prop_list = prop_list
 
     def __len__(self):
         return len(self._prop_list)
+
+
+class CollectionPageBase(CollectionBase):
 
     @property
     def next_page_request(self):

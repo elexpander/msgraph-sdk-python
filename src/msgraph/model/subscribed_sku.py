@@ -7,9 +7,10 @@
 
 from __future__ import unicode_literals
 from ..model.license_units_detail import LicenseUnitsDetail
-from ..request.service_plan_collection import ServicePlanCollectionPage
-from ..model.service_plan_info import ServicePlanInfo
+from ..graph_object_base import GraphObjectBase
+from ..request.service_plan_collection import ServicePlanCollection
 from .entity import Entity
+
 
 class SubscribedSku(Entity):
     def __init__(self, prop_dict={}):
@@ -82,7 +83,7 @@ class SubscribedSku(Entity):
                 The servicePlans
         """
         if "servicePlans" in self._prop_dict:
-            return ServicePlanCollectionPage(self._prop_dict["servicePlans"])
+            return ServicePlanCollection(self._prop_dict["servicePlans"])
         else:
             return None
 

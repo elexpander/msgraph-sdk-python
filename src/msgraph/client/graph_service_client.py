@@ -116,6 +116,15 @@ class GraphServiceClient(object):
         """
         return GroupsCollectionRequestBuilder(self.base_url + "groups", self)
 
+    def group(self, id_):
+        """Get the GroupsCollectionRequestBuilder for constructing requests
+
+        Returns:
+            :class:`GroupsCollectionRequestBuilder<microsoft.msgraph.request.groups_collection.GroupsCollectionRequestBuilder>`:
+                The GroupsCollectionRequestBuilder to return
+        """
+        return GroupsCollectionRequestBuilder(self.base_url + "groups/" + id_, self)
+
     @property
     def directory_roles(self):
         """Get the DirectoryRolesCollectionRequestBuilder for constructing requests

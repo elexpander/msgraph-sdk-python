@@ -2,7 +2,8 @@
 Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 """
 
-from __future__ import generators, unicode_literals
+from __future__ import generators
+from __future__ import unicode_literals
 from .version import __version__
 from .options import *
 from .graph_object_base import GraphObjectBase

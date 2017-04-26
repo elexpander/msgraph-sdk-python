@@ -157,22 +157,12 @@ class AuthProvider(AuthProviderBase):
 
         auth_url = self._auth_token_url
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        print('debug - auth_provider: authenticate')
-        print("headers: ")
-        print(headers)
-        print()
-        print("url: ")
-        print(auth_url)
-        print()
-        print("data: ")
-        print(params)
-        print()
-        response = self._http_provider.send(method="POST", headers=headers, url=auth_url, data=params)
 
+        response = self._http_provider.send(method="POST",
+                                            headers=headers,
+                                            url=auth_url,
+                                            data=params)
         rcont = json.loads(response.content)
-        print("response:")
-        print(rcont)
-        print()
         self._session = self._session_type(token_type=rcont["token_type"],
                                            expires_in=rcont["expires_in"],
                                            scope_string='',

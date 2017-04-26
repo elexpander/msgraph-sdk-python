@@ -10,7 +10,7 @@ from ..collection_base import CollectionPageBase
 from ..model.assigned_plan import AssignedPlan
 
 
-class AssignedPlanCollectionPage(CollectionPageBase):
+class AssignedPlanCollection(CollectionPageBase):
     def __getitem__(self, index):
         """Get the DirectoryObject at the index specified
 
