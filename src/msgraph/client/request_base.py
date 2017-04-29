@@ -25,14 +25,11 @@ class RequestBase(object):
         """
         self._client = client
         self._request_url = request_url
+        self._response = None
         self._headers = {}
         self._query_options = {}
         self._content_type = None
         self._method = None
-
-        print()
-        print('* Request:')
-        print(request_url)
 
         if options:
             header_list = [
@@ -55,6 +52,10 @@ class RequestBase(object):
         self._query_options.update(query_dict)
         url_parts[4] = urlencode(self._query_options)
         return urlunparse(url_parts)
+
+    @property
+    def response(self):
+        return self._response
 
     @property
     def content_type(self):
@@ -119,11 +120,11 @@ class RequestBase(object):
             self.append_option(HeaderOption("Content-Type", self._content_type))
 
         if path:
-            response = self._client.http_provider.send(
-                self._method,
-                self._headers,
-                self._request_url,
-                path=path)
+            self._response = self._client.http_provider.send(
+                             self._method,
+                             self._headers,
+                             self._request_url,
+                             path=path)
         else:
             content_dict = None
 
@@ -131,16 +132,13 @@ class RequestBase(object):
                 content_dict = content.to_dict() if isinstance(
                     content, GraphObjectBase) else content
 
-            response = self._client.http_provider.send(
-                self._method,
-                self._headers,
-                self._request_url,
-                content=content_dict)
+            self._response = self._client.http_provider.send(
+                             self._method,
+                             self._headers,
+                             self._request_url,
+                             content=content_dict)
 
-        print()
-        print('* Response:')
-        print(response)
-        return response
+        return self._response
 
     def download_item(self, path):
         """Download a file to a local path
