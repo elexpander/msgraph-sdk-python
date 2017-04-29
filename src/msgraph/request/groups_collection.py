@@ -13,6 +13,7 @@ from ..model.group import Group
 import json
 import asyncio
 
+
 class GroupsCollectionRequest(CollectionRequestBase):
 
     def __init__(self, request_url, client, options):
@@ -51,6 +52,7 @@ class GroupsCollectionRequest(CollectionRequestBase):
                                                     self.get)
         collection_page = yield from future
         return collection_page
+
 
 class GroupsCollectionRequestBuilder(RequestBuilderBase):
 
