@@ -30,13 +30,13 @@ class GraphRequest(RequestBase):
         if response_dict:
 
             if 'value' in response_dict:
-                # It's a collection
+                # It's a collection of entities
                 page = GraphPage(response_dict["value"])
                 if '@odata.nextLink' in response_dict:
                     page.set_next_page_request(response_dict["@odata.nextLink"], self._client)
             else:
-                # It's a unique object
-                page = GraphPage(response_dict)
+                # It's an entity
+                page = GraphPage([response_dict])
             return page
 
         return None
@@ -76,15 +76,15 @@ class GraphPage(object):
         obj = self._graph_objects[index]
         return obj
 
-    def users(self):
-        """Get a generator of User within the GraphPage
+    def graph_objects(self):
+        """Get a generator of Object within the GraphPage
 
         Yields:
             :class:`User<msgraph.model.user.User>`:
-                The next User in the collection
+                The next Object in the collection
         """
-        for item in self._prop_list:
-            yield User(item)
+        for item in self._graph_objects:
+            yield GraphObject(item)
 
     @property
     def next_page_request(self):
@@ -93,10 +93,7 @@ class GraphPage(object):
         Returns:
             The request object to send
         """
-        try:
-            return self._next_page_request
-        except:
-            return None
+        return self._next_page_request
 
     def set_next_page_request(self, next_page_link, client):
         """Initialize the next page request for the GraphPage

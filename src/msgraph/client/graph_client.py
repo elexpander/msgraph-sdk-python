@@ -6,7 +6,8 @@
 """
 
 from __future__ import unicode_literals
-from .collection import GraphRequest
+from .request import GraphRequest
+from .model import GraphSchema
 
 
 class GraphClient(object):
@@ -23,6 +24,16 @@ class GraphClient(object):
                 The HTTP provider used by the client to send all 
                 requests to Graph
         """
+        schema = GraphSchema(base_url)
+        graph_class = schema.load_classes()
+
+        u1 = graph_class['GraphUser'](displayName='ander',
+                                                jobTitle='systems admin',
+                                                mail='ander@mail.com')
+        print(u1)
+
+        exit(0)
+
         self._base_url = base_url
         self._auth_provider = auth_provider
         self._http_provider = http_provider
@@ -70,3 +81,4 @@ class GraphClient(object):
 
     def request(self, api_call):
         return GraphRequest(self.base_url + api_call, self)
+
