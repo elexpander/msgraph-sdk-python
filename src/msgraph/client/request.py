@@ -2,6 +2,8 @@
 
 from __future__ import unicode_literals
 from .request_base import RequestBase
+from .model import GraphSchema
+from collections import UserList
 import json
 
 
@@ -31,60 +33,47 @@ class GraphRequest(RequestBase):
 
             if 'value' in response_dict:
                 # It's a collection of entities
+                # "@odata.context"
                 page = GraphPage(response_dict["value"])
+                page.data_context = response_dict["@odata.context"]
+
                 if '@odata.nextLink' in response_dict:
                     page.set_next_page_request(response_dict["@odata.nextLink"], self._client)
             else:
                 # It's an entity
                 page = GraphPage([response_dict])
+                page.data_context = response_dict["@odata.context"]
             return page
 
         return None
 
 
-class GraphPage(object):
+class GraphPage(UserList):
     def __init__(self, graph_objects=[]):
-        self._graph_objects = graph_objects
+        super().__init__(graph_objects)
+        self._data_context = ''
         self._next_page_request = None
 
-    def __len__(self):
-        return len(self._graph_objects)
-
-    def __str__(self):
-        """Returns a string representation of the object
-        including object type and all properties
-
-        Returns:
-            string
+    @property
+    def data_context(self):
         """
-        output = '<MSGRAPH ' + type(self).__name__ + ': {\n'
-        for obj in self._graph_objects:
-            output = output + str(obj) + ",\n"
-        output = output + '}>'
-        return output
-
-    def __getitem__(self, index):
-        """Get the User at the index specified
-
-        Args:
-            index (int): The index of the item to get from the GraphPage
-
-        Returns:
-            :class:`User<msgraph.model.user.User>`:
-                The User at the index
+        Get and set page data context for all objects on it
+        :return: GraphClass
         """
-        obj = self._graph_objects[index]
-        return obj
+        return self._data_context
 
-    def graph_objects(self):
-        """Get a generator of Object within the GraphPage
+    @data_context.setter
+    def data_context(self, val):
+        pos = val.find('#')
+        self._data_context = val[pos+1:]
 
-        Yields:
-            :class:`User<msgraph.model.user.User>`:
-                The next Object in the collection
-        """
-        for item in self._graph_objects:
-            yield GraphObject(item)
+    def objects(self):
+        for item in self:
+            if '@odata.type' in item:
+                class_name = GraphSchema.get_python_tag(item['@odata.type'])
+            else:
+                class_name = GraphSchema.get_python_tag(tag=None, context=self.data_context)
+            yield GraphSchema.get_class(class_name)(item)
 
     @property
     def next_page_request(self):

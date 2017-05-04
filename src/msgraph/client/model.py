@@ -9,11 +9,9 @@ from os.path import isfile
 
 class GraphFunction(object):
     def __init__(self,
-                 is_action=False,
                  return_type=None,
                  parameters=None):
         super().__init__()
-        self._is_action = is_action
         self._return_type = return_type
         self._parameters = parameters
 
@@ -24,12 +22,14 @@ class GraphType(object):
                  base_graph_type=None,
                  properties=None,
                  navigation_properties=None,
+                 actions=None,
                  functions=None):
         super().__init__()
         self._is_entity = is_entity
         self._base_graph_type = base_graph_type
         self._properties = properties
         self._navigation_properties = navigation_properties
+        self._actions = actions
         self._functions = functions
 
     @property
@@ -41,6 +41,14 @@ class GraphType(object):
         return self._is_entity
 
     @property
+    def base(self):
+        """
+        Gets the base graph type
+        :return: <string> base graph type
+        """
+        return self._base_graph_type
+
+    @property
     def properties(self):
         """
         Gets properties
@@ -48,13 +56,27 @@ class GraphType(object):
         """
         return self._properties
 
+    def add_action(self, name, graph_action):
+        """
+        Adds a GraphFunction to the functions dictionary
+        :param name: Name of function
+        :param graph_action: GraphFunction object
+        """
+        if self._actions is None:
+            self._actions = {name: graph_action}
+        else:
+            self._actions[name] = graph_action
+
     def add_function(self, name, graph_function):
         """
         Adds a GraphFunction to the functions dictionary
         :param name: Name of function
         :param graph_function: GraphFunction object
         """
-        self._functions[name] = graph_function
+        if self._functions is None:
+            self._functions = {name: graph_function}
+        else:
+            self._functions[name] = graph_function
 
 
 class GraphObjectBase(object):
@@ -62,7 +84,8 @@ class GraphObjectBase(object):
     def __str__(self):
         output = '<MSGRAPH Object: ' + type(self).__name__ + ' {\n'
         for k, v in self.__dict__.items():
-            output += '\t' + k + ': ' + v + ',\n'
+            value = str(v)
+            output += '\t' + k + ': ' + value + ',\n'
         output += '}'
         return output
 
@@ -71,15 +94,20 @@ class GraphSchema(object):
     """
         graph_type {
             is_entity
-            base_graph_type
+            base
             properties: {
                 graph_type
             }
             navigation_properties: {
                 graph_type
             }
-            graph_functions {
-                is_action
+            graph_actions: {
+                return_graph_type
+                parameters {
+                    graph_type
+                }
+            }
+            graph_functions: {
                 return_graph_type
                 parameters {
                     graph_type
@@ -87,11 +115,12 @@ class GraphSchema(object):
             }
         }
     """
+    graph_classes = {}
+
     def __init__(self, base_url):
         self._schema_file = 'schema.xml'
         self._ns = '{http://docs.oasis-open.org/odata/ns/edm}'
         self._ns_prefix = ''
-
         self._graph_enums = {}
         self._graph_types = {}
 
@@ -102,38 +131,46 @@ class GraphSchema(object):
         # Load schema XML file
         tree = ET.parse(self._schema_file)
         root = tree.getroot()
-        schema = next(root.iter(self._ns_tag('Schema')))
+        schema = next(root.iter(self._add_ns_to_tag('Schema')))
 
         # Load namespace prefix, normally microsoft.graph.
         self._ns_prefix = schema.attrib['Namespace'] + '.'
 
         # EnumType to Dictionary - https://docs.python.org/3/library/enum.html
-        for e_type in schema.iterfind(self._ns_tag('EnumType')):
+        for e_type in schema.iterfind(self._add_ns_to_tag('EnumType')):
             d_type = {}
-            for e_attrib in e_type.iterfind(self._ns_tag('Member')):
+            for e_attrib in e_type.iterfind(self._add_ns_to_tag('Member')):
                 # Add attribute to type dictionary
                 d_type[e_attrib.attrib['Value']] = e_attrib.attrib['Name']
 
             # Add type to schema dictionary
-            self._graph_enums[self._graph_tag(e_type.attrib['Name'])] = d_type
+            self._graph_enums[GraphSchema.get_python_tag(e_type.attrib['Name'])] = d_type
 
         # Process EntityType
-        for e_type in schema.iterfind(self._ns_tag('EntityType')):
+        for e_type in schema.iterfind(self._add_ns_to_tag('EntityType')):
 
-            # Load entity properties
+            # Get type name
+            type_name = GraphSchema.get_python_tag(e_type.attrib['Name'])
+
+            # Get type properties
             properties = {}
-            for e_attrib in e_type.iterfind(self._ns_tag('Property')):
+            for e_attrib in e_type.iterfind(self._add_ns_to_tag('Property')):
                 # Add attribute to type dictionary
                 properties[e_attrib.attrib['Name']] = e_attrib.attrib['Type']
 
             # Load entity navigation_properties
             navigation_properties = {}
-            for e_attrib in e_type.iterfind(self._ns_tag('NavigationProperty')):
+            for e_attrib in e_type.iterfind(self._add_ns_to_tag('NavigationProperty')):
                 # Add attribute to type dictionary
                 navigation_properties[e_attrib.attrib['Name']] = e_attrib.attrib['Type']
 
+            # Get entity base entity
+            if 'BaseType' in e_type.attrib:
+                base = GraphSchema.get_python_tag(e_type.attrib['BaseType'])
+            else:
+                base = None
+
             # Create entity_type dictionary object
-            base = e_type.attrib['BaseType'] if 'BaseType' in e_type.attrib else None
             entity_type = GraphType(is_entity=True,
                                     base_graph_type=base,
                                     properties=properties,
@@ -141,28 +178,33 @@ class GraphSchema(object):
                                     functions={})
 
             # Add entity_type to graph_type dictionary
-            self._graph_types[self._class_tag(e_type.attrib['Name'])] = entity_type
+            self._graph_types[type_name] = entity_type
 
         # Process ComplexType
-        for e_type in schema.iterfind(self._ns_tag('ComplexType')):
+        for e_type in schema.iterfind(self._add_ns_to_tag('ComplexType')):
+
+            # Get type name
+            type_name = GraphSchema.get_python_tag(e_type.attrib['Name'])
+
+            # Get type properties
             properties = {}
-            for e_attrib in e_type.iterfind(self._ns_tag('Property')):
+            for e_attrib in e_type.iterfind(self._add_ns_to_tag('Property')):
                 # Add attribute to type dictionary
                 properties[e_attrib.attrib['Name']] = e_attrib.attrib['Type']
 
             complex_type = GraphType(properties=properties)
 
             # Add type to schema dictionary
-            self._graph_types[self._class_tag(e_type.attrib['Name'])] = complex_type
+            self._graph_types[type_name] = complex_type
 
         # Process Actions
-        for e_type in schema.iterfind(self._ns_tag('Action')):
+        for e_type in schema.iterfind(self._add_ns_to_tag('Action')):
             parameters = {}
             binding = None
 
-            for e_attrib in e_type.iterfind(self._ns_tag('Parameter')):
+            for e_attrib in e_type.iterfind(self._add_ns_to_tag('Parameter')):
                 if e_attrib.attrib['Name'] == 'bindingParameter':
-                    binding = e_attrib.attrib['Type']
+                    binding = GraphSchema.get_python_tag(e_attrib.attrib['Type'])
                 else:
                     # Add attribute type to parameters dictionary
                     parameters[e_attrib.attrib['Name']] = e_attrib.attrib['Type']
@@ -170,26 +212,25 @@ class GraphSchema(object):
             if binding:
                 # Load return_graph_type
                 try:
-                    et_return_type = next(e_type.iterfind(self._ns_tag('ReturnType')))
+                    et_return_type = next(e_type.iterfind(self._add_ns_to_tag('ReturnType')))
                     return_type = et_return_type.attrib['Type']
                 except:
                     return_type = None
 
-                type_function = GraphFunction(is_action=True,
-                                              return_type=return_type,
+                type_function = GraphFunction(return_type=return_type,
                                               parameters=parameters)
 
                 # Attach action to entity_type in graph_type dictionary
-                self._graph_types[self._class_tag(binding)].add_function(e_type.attrib['Name'], type_function)
+                self._graph_types[binding].add_action(e_type.attrib['Name'], type_function)
 
         # Process Functions
-        for e_type in schema.iterfind(self._ns_tag('Function')):
+        for e_type in schema.iterfind(self._add_ns_to_tag('Function')):
             parameters = {}
             binding = None
 
-            for e_attrib in e_type.iterfind(self._ns_tag('Parameter')):
+            for e_attrib in e_type.iterfind(self._add_ns_to_tag('Parameter')):
                 if e_attrib.attrib['Name'] == 'bindingParameter':
-                    binding = e_attrib.attrib['Type']
+                    binding = GraphSchema.get_python_tag(e_attrib.attrib['Type'])
                 else:
                     # Add attribute type to parameters dictionary
                     parameters[e_attrib.attrib['Name']] = e_attrib.attrib['Type']
@@ -197,52 +238,87 @@ class GraphSchema(object):
             if binding:
                 # Load return_graph_type
                 try:
-                    et_return_type = next(e_type.iterfind(self._ns_tag('ReturnType')))
+                    et_return_type = next(e_type.iterfind(self._add_ns_to_tag('ReturnType')))
                     return_type = et_return_type.attrib['Type']
                 except:
                     return_type = None
-                type_function = GraphFunction(is_action=False,
-                                              return_type=return_type,
+                type_function = GraphFunction(return_type=return_type,
                                               parameters=parameters)
 
                 # Attach action to entity_type in graph_type dictionary
-                self._graph_types[self._class_tag(binding)].add_function(e_type.attrib['Name'], type_function)
+                self._graph_types[binding].add_function(e_type.attrib['Name'], type_function)
 
-    def _ns_tag(self, tag):
+    def _add_ns_to_tag(self, tag):
         """Return tag with full namespace format
         """
         return self._ns + tag.replace(self._ns_prefix, '')
 
-    def _graph_tag(self, tag):
-        """Return tag with api type format. Normally microsoft.graph.tag
-        """
-        return self._ns_prefix + tag.replace(self._ns, '')
-
-    def _class_tag(self, tag):
+    @staticmethod
+    def get_python_tag(tag, context=None):
         """Return tag with Python Class format (GraphClassName)
         """
-        new_tag = tag.replace(self._ns, '').replace(self._ns_prefix, '')
+        if tag:
+            pos = tag.find('}')
+            if pos > 0:
+                # tag is in namespace format
+                new_tag = tag[pos+1:]
+
+            elif len(tag.split('.')) == 3:
+                # tag is in microsoft.graph format
+                new_tag = tag.split('.')[-1]
+
+            else:
+                new_tag = tag
+
+        elif context:
+            # Remove /$entity tag from context if it was there
+            new_tag = context.replace('/$entity', '')
+
+            # Remove the plural 's'
+            new_tag = new_tag.rstrip('s')
+
+        else:
+            raise ValueError('No value received.')
+
         return 'Graph' + new_tag[0].upper() + new_tag[1:]
 
     def load_classes(self):
         """Return dictionary with all Graph Classes
         """
-        graph_class = {}
-
         for name, graph_type in self._graph_types.items():
-            graph_class[name] = self._create_class(name, list(graph_type.properties.keys()))
+            if graph_type.base:
+                base_class = GraphSchema.graph_classes[graph_type.base]
+                GraphSchema.graph_classes[name] = self._create_class(name,
+                                                                     property_list=list(graph_type.properties.keys()),
+                                                                     base_class=base_class)
+            else:
+                GraphSchema.graph_classes[name] = self._create_class(name,
+                                                                     property_list=list(graph_type.properties.keys()))
 
-        return graph_class
+    @staticmethod
+    def get_class(name):
+        return GraphSchema.graph_classes[name]
 
-    def _create_class(self, name, argnames, base_class=GraphObjectBase):
-        def f__init__(self, **kwargs):
-            for key, value in kwargs.items():
-                # argnames variable is the one passed to _create_class
-                if key not in argnames:
-                    raise TypeError("Argument %s not valid for %s"
-                        % (key, self.__class__.__name__))
-                setattr(self, key, value)
-                base_class.__init__(self)
+    def _create_class(self,
+                      name,
+                      property_list,
+                      navigation_property_list=None,
+                      action_list=None,
+                      function_list=None,
+                      base_class=GraphObjectBase):
+
+        def f__init__(self, args):
+            if not base_class == GraphObjectBase:
+                base_class.__init__(self, args)
+
+            for p_name, p_value in args.items():
+                if not p_name.startswith('@') and p_name in property_list:
+                    setattr(self, p_name, p_value)
+
+            """TypeError: Argument id not valid for GraphDirectoryRole
+                hay que dar soporte de herencia
+            """
+
         new_class = type(name, (base_class,), {"__init__": f__init__})
         return new_class
 

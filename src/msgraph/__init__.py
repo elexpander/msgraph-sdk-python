@@ -240,5 +240,5 @@ from .options import HeaderOption
 from .error import GraphError
 from .extensions.graph_client_helper import *
 from .extensions import *
-from .client.graph_client import GraphClient
+from .client.client import GraphClient
 import sys

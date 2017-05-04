@@ -25,14 +25,7 @@ class GraphClient(object):
                 requests to Graph
         """
         schema = GraphSchema(base_url)
-        graph_class = schema.load_classes()
-
-        u1 = graph_class['GraphUser'](displayName='ander',
-                                                jobTitle='systems admin',
-                                                mail='ander@mail.com')
-        print(u1)
-
-        exit(0)
+        schema.load_classes()
 
         self._base_url = base_url
         self._auth_provider = auth_provider
@@ -82,3 +75,10 @@ class GraphClient(object):
     def request(self, api_call):
         return GraphRequest(self.base_url + api_call, self)
 
+    """
+    def graph_object(self, graph_object_type):
+        
+        u1 = graph_class['GraphUser'](displayName='ander',
+                                      jobTitle='systems admin',
+                                      mail='ander@mail.com')
+    """
