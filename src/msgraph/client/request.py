@@ -2,7 +2,8 @@
 
 from __future__ import unicode_literals
 from .request_base import RequestBase
-from .model import GraphSchema
+from .metadata import GraphMetadata
+from .model import GraphModel
 from collections import UserList
 import json
 
@@ -17,7 +18,7 @@ class GraphRequest(RequestBase):
             client (:class:`GraphClient<msgraph.request.graph_client.GraphClient>`):
                 The client which will be used for the request
         """
-        super(GraphRequest, self).__init__(request_url, client, None)
+        super().__init__(request_url, client, None)
 
     def get(self):
         """Gets the GraphPage
@@ -64,16 +65,21 @@ class GraphPage(UserList):
 
     @data_context.setter
     def data_context(self, val):
+        """
+        Data context is cleaned before saving it.
+        All text until '#' is removed from the incomming context value
+        :param val: str context
+        """
         pos = val.find('#')
-        self._data_context = val[pos+1:]
+        self._data_context = val[pos+1:] if pos >= 0 else val
 
     def objects(self):
         for item in self:
             if '@odata.type' in item:
-                class_name = GraphSchema.get_python_tag(item['@odata.type'])
+                class_name = GraphMetadata.get_python_tag(item['@odata.type'])
             else:
-                class_name = GraphSchema.get_python_tag(tag=None, context=self.data_context)
-            yield GraphSchema.get_class(class_name)(item)
+                class_name = GraphMetadata.get_python_tag(tag=None, context=self.data_context)
+            yield GraphModel.get_class(class_name)(item)
 
     @property
     def next_page_request(self):

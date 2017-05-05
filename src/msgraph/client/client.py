@@ -7,7 +7,7 @@
 
 from __future__ import unicode_literals
 from .request import GraphRequest
-from .model import GraphSchema
+from .model import GraphModel
 
 
 class GraphClient(object):
@@ -24,12 +24,14 @@ class GraphClient(object):
                 The HTTP provider used by the client to send all 
                 requests to Graph
         """
-        schema = GraphSchema(base_url)
-        schema.load_classes()
-
         self._base_url = base_url
         self._auth_provider = auth_provider
         self._http_provider = http_provider
+
+        model_file = 'model.json'
+
+        graph_model = GraphModel(model_file, base_url)
+
 
     @property
     def auth_provider(self):

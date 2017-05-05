@@ -194,14 +194,14 @@ class AuthProvider(AuthProviderBase):
             "grant_type": "authorization_code"
         }
         if resource is not None:
-           params["resource"] = resource
+            params["resource"] = resource
 
         auth_url = self._auth_token_url
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
         response = self._http_provider.send(method="POST",
-                                           headers=headers,
-                                           url=auth_url,
-                                           data=params)
+                                            headers=headers,
+                                            url=auth_url,
+                                            data=params)
 
         rcont = json.loads(response.content)
         self._session = self._session_type(rcont["token_type"],

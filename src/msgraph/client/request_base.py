@@ -120,23 +120,23 @@ class RequestBase(object):
             self.append_option(HeaderOption("Content-Type", self._content_type))
 
         if path:
-            self._response = self._client.http_provider.send(
-                             self._method,
-                             self._headers,
-                             self._request_url,
-                             path=path)
+            self._response = self._client.http_provider.send(self._method,
+                                                             self._headers,
+                                                             self._request_url,
+                                                             path=path)
         else:
             content_dict = None
 
             if content:
-                content_dict = content.to_dict() if isinstance(
-                    content, GraphObjectBase) else content
+                if isinstance(content, GraphObjectBase):
+                    content_dict = content.to_dict()
+                else:
+                    content_dict = content
 
-            self._response = self._client.http_provider.send(
-                             self._method,
-                             self._headers,
-                             self._request_url,
-                             content=content_dict)
+            self._response = self._client.http_provider.send(self._method,
+                                                             self._headers,
+                                                             self._request_url,
+                                                             content=content_dict)
 
         return self._response
 
