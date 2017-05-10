@@ -21,6 +21,8 @@ class GraphObjectBase(object):
 
 class GraphModel(object):
 
+    graph_classes = {}
+
     def __init__(self, model_file, base_url):
         """
         Loads classes from model file
@@ -33,8 +35,7 @@ class GraphModel(object):
             # create model file from metadata
             metadata_dic = GraphMetadata(base_url)
             with open(model_file, 'w') as f:
-                json.dump(metadata_dic, f)
-
+                json.dump(metadata_dic, f, indent=4)
 
 
 
@@ -87,3 +88,37 @@ class GraphModel(object):
                 GraphMetadata.graph_classes[name] = self._create_class(name,
                                                                      property_list=list(graph_type.properties.keys()))
 
+
+    @staticmethod
+    def get_python_tag(tag, context=None):
+        """Return tag with Python Class format (GraphClassName)
+        """
+        if tag:
+            pos = tag.find('}')
+            if pos > 0:
+                # tag is in namespace format
+                new_tag = tag[pos+1:]
+
+            elif len(tag.split('.')) == 3:
+                # tag is in microsoft.graph format
+                new_tag = tag.split('.')[-1]
+
+            else:
+                new_tag = tag
+
+        elif context:
+
+            if '$entity' in context:
+                # Remove /$entity tag from context if it was there
+                new_tag = context.replace('/$entity', '')
+
+            elif '/' in context:
+                new_tag = context.split('/')[-1]
+
+            # Remove the plural 's'
+            new_tag = new_tag.rstrip('s')
+
+        else:
+            raise ValueError('No value received.')
+
+        return 'Graph' + new_tag[0].upper() + new_tag[1:]
