@@ -7,7 +7,6 @@
 
 from __future__ import unicode_literals
 from .request import GraphRequest
-from .model import GraphModel
 
 
 class GraphClient(object):
@@ -27,11 +26,6 @@ class GraphClient(object):
         self._base_url = base_url
         self._auth_provider = auth_provider
         self._http_provider = http_provider
-
-        model_file = 'model.json'
-
-        graph_model = GraphModel(model_file, base_url)
-
 
     @property
     def auth_provider(self):
@@ -76,11 +70,3 @@ class GraphClient(object):
 
     def request(self, api_call):
         return GraphRequest(self.base_url + api_call, self)
-
-    """
-    def graph_object(self, graph_object_type):
-        
-        u1 = graph_class['GraphUser'](displayName='ander',
-                                      jobTitle='systems admin',
-                                      mail='ander@mail.com')
-    """

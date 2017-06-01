@@ -2,10 +2,9 @@
 
 from __future__ import unicode_literals
 from .request_base import RequestBase
-from .metadata import GraphMetadata
-from .model import GraphModel
 from collections import UserList
 import json
+from ..model2.auxiliary import get_object_class
 
 
 class GraphRequest(RequestBase):
@@ -32,17 +31,15 @@ class GraphRequest(RequestBase):
         response_dict = json.loads(self.send().content)
         if response_dict:
 
-            if 'value' in response_dict:
-                # It's a collection of entities
-                # "@odata.context"
+            if "value" in response_dict:
                 page = GraphPage(response_dict["value"])
-                page.data_context = response_dict["@odata.context"]
-
-                if '@odata.nextLink' in response_dict:
-                    page.set_next_page_request(response_dict["@odata.nextLink"], self._client)
             else:
-                # It's an entity
                 page = GraphPage([response_dict])
+
+            if '@odata.nextLink' in response_dict:
+                page.set_next_page_request(response_dict["@odata.nextLink"], self._client)
+
+            if "@odata.context" in response_dict:
                 page.data_context = response_dict["@odata.context"]
             return page
 
@@ -54,6 +51,7 @@ class GraphPage(UserList):
         super().__init__(graph_objects)
         self._data_context = ''
         self._next_page_request = None
+        self._next_page_link = None
 
     @property
     def data_context(self):
@@ -65,21 +63,15 @@ class GraphPage(UserList):
 
     @data_context.setter
     def data_context(self, val):
-        """
-        Data context is cleaned before saving it.
-        All text until '#' is removed from the incomming context value
-        :param val: str context
-        """
-        pos = val.find('#')
-        self._data_context = val[pos+1:] if pos >= 0 else val
+        self._data_context = val
 
     def objects(self):
         for item in self:
-            if '@odata.type' in item:
-                class_name = GraphMetadata.get_python_tag(item['@odata.type'])
-            else:
-                class_name = GraphMetadata.get_python_tag(tag=None, context=self.data_context)
-            yield GraphModel.get_class(class_name)(item)
+
+            odata_type = item['@odata.type'] if '@odata.type' in item else None
+            c =get_object_class(self.data_context, odata_type)
+
+            yield c(item)
 
     @property
     def next_page_request(self):
@@ -90,6 +82,10 @@ class GraphPage(UserList):
         """
         return self._next_page_request
 
+    @property
+    def next_page_link(self):
+        return self._next_page_link
+
     def set_next_page_request(self, next_page_link, client):
         """Initialize the next page request for the GraphPage
 
@@ -99,4 +95,5 @@ class GraphPage(UserList):
             client (:class:`GraphClient<msgraph.model.graph_client.GraphClient>`:
                 The client to be used for the request
         """
+        self._next_page_link = next_page_link
         self._next_page_request = GraphRequest(next_page_link, client)
