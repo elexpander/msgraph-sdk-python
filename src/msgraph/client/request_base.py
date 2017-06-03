@@ -3,12 +3,7 @@ from __future__ import unicode_literals
 from ..version import __version__
 from ..options import *
 from ..graph_object_base import GraphObjectBase
-
-try:
-    from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
-except ImportError:
-    from urlparse import urlparse, parse_qsl, urlunparse
-    from urllib import urlencode
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 
 class RequestBase(object):

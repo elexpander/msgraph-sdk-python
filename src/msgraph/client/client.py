@@ -70,3 +70,10 @@ class GraphClient(object):
 
     def request(self, api_call):
         return GraphRequest(self.base_url + api_call, self)
+
+    def get_page(self, api_call):
+        return GraphRequest(self.base_url + api_call, self).get()
+
+    def get_object(self, api_call):
+        page = GraphRequest(self.base_url + api_call, self).get()
+        return next(page.objects())

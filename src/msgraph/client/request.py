@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from .request_base import RequestBase
 from collections import UserList
 import json
-from ..model2.auxiliary import get_object_class
+from ..model.auxiliary import get_object_class
 
 
 class GraphRequest(RequestBase):
@@ -69,7 +69,7 @@ class GraphPage(UserList):
         for item in self:
 
             odata_type = item['@odata.type'] if '@odata.type' in item else None
-            c =get_object_class(self.data_context, odata_type)
+            c = get_object_class(self.data_context, odata_type)
 
             yield c(item)
 
