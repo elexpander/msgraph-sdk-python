@@ -1,3 +1,4 @@
+model/
 venv*/
 .idea/
 __pycache__/

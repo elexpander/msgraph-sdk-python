@@ -1,18 +1,12 @@
 """
 Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 """
-
 from __future__ import generators
 from __future__ import unicode_literals
 from .version import __version__
 from .options import *
 from .graph_object_base import GraphObjectBase
-
-try:
-    from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
-except ImportError:
-    from urlparse import urlparse, parse_qsl, urlunparse
-    from urllib import urlencode
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 
 class RequestBase(object):
@@ -29,11 +23,13 @@ class RequestBase(object):
         """
         self._client = client
         self._request_url = request_url
+        self._response = None
         self._headers = {}
         self._query_options = {}
-        self.content_type = None
+        self._content_type = None
+        self._method = None
 
-        if (options):
+        if options:
             header_list = [
                 pair for pair in options if isinstance(pair, HeaderOption)]
             self._headers = {pair.key: pair.value for pair in header_list}
@@ -54,6 +50,10 @@ class RequestBase(object):
         self._query_options.update(query_dict)
         url_parts[4] = urlencode(self._query_options)
         return urlunparse(url_parts)
+
+    @property
+    def response(self):
+        return self._response
 
     @property
     def content_type(self):
@@ -114,29 +114,29 @@ class RequestBase(object):
         self.append_option(HeaderOption("Content-Type", "application/json"))
         self.append_option(HeaderOption("X-RequestStats", "SDK-Version=python-v"+__version__))
 
-        if self.content_type:
-            self.append_option(HeaderOption("Content-Type", self.content_type))
+        if self._content_type:
+            self.append_option(HeaderOption("Content-Type", self._content_type))
 
         if path:
-            response = self._client.http_provider.send(
-                self.method,
-                self._headers,
-                self.request_url,
-                path=path)
+            self._response = self._client.http_provider.send(self._method,
+                                                             self._headers,
+                                                             self._request_url,
+                                                             path=path)
         else:
             content_dict = None
 
             if content:
-                content_dict = content.to_dict() if isinstance(
-                    content, GraphObjectBase) else content
+                if isinstance(content, GraphObjectBase):
+                    content_dict = content.to_dict()
+                else:
+                    content_dict = content
 
-            response = self._client.http_provider.send(
-                self.method,
-                self._headers,
-                self.request_url,
-                content=content_dict)
+            self._response = self._client.http_provider.send(self._method,
+                                                             self._headers,
+                                                             self._request_url,
+                                                             content=content_dict)
 
-        return response
+        return self._response
 
     def download_item(self, path):
         """Download a file to a local path
@@ -153,8 +153,8 @@ class RequestBase(object):
         self.append_option(HeaderOption("X-RequestStats",
                                         "SDK-Version=python-v"+__version__))
 
-        if self.content_type:
-            self.append_option(HeaderOption("Content-Type", self.content_type))
+        if self._content_type:
+            self.append_option(HeaderOption("Content-Type", self._content_type))
 
         response = self._client.http_provider.download(
             self._headers,
@@ -163,7 +163,7 @@ class RequestBase(object):
 
         return response
 
-    def _set_query_options(self, expand=None, select=None, top=None, order_by=None):
+    def set_query_options(self, expand=None, select=None, top=None, order_by=None):
         """Adds query options from a set of known parameters
 
         Args:

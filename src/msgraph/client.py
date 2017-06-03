@@ -4,8 +4,6 @@
 # 
 #  This file was generated and any changes will be overwritten.
 """
-
-from __future__ import unicode_literals
 from .request import GraphRequest
 
 

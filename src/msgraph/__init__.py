@@ -7,5 +7,5 @@ from .auth_provider import AuthProvider
 from .options import QueryOption
 from .options import HeaderOption
 from .error import GraphError
-from .client.client import GraphClient
+from .client import GraphClient
 

@@ -4,8 +4,7 @@ from __future__ import unicode_literals
 from .request_base import RequestBase
 from collections import UserList
 import json
-from ..model.auxiliary import get_object_class
-from ..error import GraphError
+from .model.auxiliary import get_object_class
 
 
 class GraphRequest(RequestBase):
