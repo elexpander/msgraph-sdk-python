@@ -29,7 +29,7 @@ class HttpResponse(object):
                 if type(message["error"]) == dict:
                     raise GraphError(message["error"], self.status)
                 else:
-                    raise Exception(str(message["error"]))
+                    raise GraphError({"message": str(message["error"])}, self.status)
 
     def __str__(self):
         properties = {

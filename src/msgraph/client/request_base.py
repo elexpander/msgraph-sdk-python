@@ -159,3 +159,27 @@ class RequestBase(object):
             path)
 
         return response
+
+    def set_query_options(self, expand=None, select=None, top=None, order_by=None):
+        """Adds query options from a set of known parameters
+
+        Args:
+            expand (str): Default None, comma-seperated list of relationships
+                to expand in the response.
+            select (str): Default None, comma-seperated list of properties to
+                include in the response.
+            top (int): Default None, the number of items to return in a result.
+            order_by (str): Default None, comma-seperated list of properties
+                that are used to sort the order of items in the response.
+        """
+        if expand:
+            self.append_option(QueryOption("$expand", expand))
+
+        if select:
+            self.append_option(QueryOption("$select", select))
+
+        if top:
+            self.append_option(QueryOption("$top", top))
+
+        if order_by:
+            self.append_option(QueryOption("$orderby", order_by))

@@ -12,38 +12,33 @@ class GraphError(Exception):
         error response dictionary, and the HTTP status code
 
         Args:
-            prop_dict (dict): A dictionary containing the response
-                from Graph
+            prop_dict (dict): A dictionary containing the response from Graph
             status_code (int): The HTTP status code (ex. 200, 201, etc.)
         """
-        if "code" not in prop_dict or "message" not in prop_dict:
-            prop_dict["code"] = ErrorCode.Malformed
-            prop_dict["message"] = "The received response was malformed"
-            super(GraphError, self).__init__(prop_dict["code"] + " - " + prop_dict["message"])
-        else:
-            super(GraphError, self).__init__(prop_dict["code"] + " - " + prop_dict["message"])
-        self._prop_dict = prop_dict
+        error_code = prop_dict["code"] if "code" in prop_dict else ErrorCode.Malformed
+        message = prop_dict["message"] if "message" in prop_dict else "The received response was malformed."
+
+        super().__init__(str(error_code) + " - " + str(message))
         self._status_code = status_code
+        self._error_code = error_code
+        self._message = message
 
     @property
     def status_code(self):
-        """The HTTP status code
-
-        Returns:
-            int: The HTTP status code
-        """
+        """The HTTP status code."""
         return self._status_code
 
     @property
     def code(self):
-        """The Graph error code sent back in
-        the response. Possible codes can be found
-        in the :class:`ErrorCode` enum.
-
-        Returns:
-            str: The error code
+        """The Graph error code sent back in the response. Possible codes can be found in the :class:`ErrorCode` enum.
+        :return str: The error code
         """
-        return self._prop_dict["code"]
+        return self._error_code
+
+    @property
+    def message(self):
+        """The Graph error message sent back in the response."""
+        return self._message
 
     @property
     def inner_error(self):
@@ -54,7 +49,7 @@ class GraphError(Exception):
             :class:`GraphError`: Error from within the inner
                 response
         """
-        return Exception(self._prop_dict["message"], self.status_code) if "message" in self._prop_dict else None
+        return Exception(self.message, self.status_code) if self.message else None
 
     def matches(self, code):
         """Recursively searches the :class:`GraphError` to find
