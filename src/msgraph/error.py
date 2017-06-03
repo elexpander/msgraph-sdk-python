@@ -18,7 +18,7 @@ class GraphError(Exception):
         error_code = prop_dict["code"] if "code" in prop_dict else ErrorCode.Malformed
         message = prop_dict["message"] if "message" in prop_dict else "The received response was malformed."
 
-        super().__init__(str(error_code) + " - " + str(message))
+        super().__init__(str(error_code) + " - " + message)
         self._status_code = status_code
         self._error_code = error_code
         self._message = message

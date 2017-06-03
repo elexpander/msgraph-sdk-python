@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from .request_base import RequestBase
 from collections import UserList
 import json
-from .model.auxiliary import get_object_class
+from .model.extension import get_object_class
 
 
 class GraphRequest(RequestBase):
@@ -28,48 +28,67 @@ class GraphRequest(RequestBase):
         """
         self.method = "GET"
 
-        response_dict = json.loads(self.send().content)
-        if response_dict:
+        page = GraphResponse(json.loads(self.send().content)).get_page()
 
-            if "value" in response_dict:
-                page = GraphPage(response_dict["value"])
-            else:
-                page = GraphPage([response_dict])
+        if page and page.next_page_link:
+            page.set_next_page_request_client(self._client)
 
-            if '@odata.nextLink' in response_dict:
-                page.set_next_page_request(response_dict["@odata.nextLink"], self._client)
+        return page
 
-            if "@odata.context" in response_dict:
-                page.data_context = response_dict["@odata.context"]
-            return page
+    def post(self, data_dict):
+        """Sends POST request and gets the page content."""
+        self.method = "POST"
 
-        return None
+        page = GraphResponse(json.loads(self.send(data_dict).content)).get_page()
+
+        if page and page.next_page_link:
+            page.set_next_page_request_client(self._client)
+
+        return page
+
+
+class GraphResponse(object):
+    def __init__(self, data_dict):
+        if isinstance(data_dict, dict):
+            self._data = data_dict["value"] if "value" in data_dict else [data_dict]
+            self._next_page_link = data_dict["@odata.nextLink"] if '@odata.nextLink' in data_dict else None
+            self._context = data_dict["@odata.context"] if "@odata.context" in data_dict else None
+        else:
+            self._data = None
+            self._next_page_link = None
+            self._context = None
+
+    def get_page(self):
+        if self._data:
+            return GraphPage(self._data, context=self._context, next_page_link=self._next_page_link)
+        else:
+            return None
 
 
 class GraphPage(UserList):
-    def __init__(self, graph_objects=[]):
+    def __init__(self, graph_objects=[], context=None, next_page_link=None):
         super().__init__(graph_objects)
-        self._data_context = ''
+        self._context = context
         self._next_page_request = None
-        self._next_page_link = None
+        self._next_page_link = next_page_link
 
     @property
-    def data_context(self):
+    def context(self):
         """
         Get and set page data context for all objects on it
         :return: GraphClass
         """
-        return self._data_context
+        return self._context
 
-    @data_context.setter
-    def data_context(self, val):
-        self._data_context = val
+    @context.setter
+    def context(self, val):
+        self._context = val
 
     def objects(self):
         for item in self:
 
             odata_type = item['@odata.type'] if '@odata.type' in item else None
-            c = get_object_class(self.data_context, odata_type)
+            c = get_object_class(self.context, odata_type)
 
             yield c(item)
 
@@ -86,7 +105,11 @@ class GraphPage(UserList):
     def next_page_link(self):
         return self._next_page_link
 
-    def set_next_page_request(self, next_page_link, client):
+    @next_page_link.setter
+    def next_page_link(self, value):
+        self._next_page_link = value
+
+    def set_next_page_request_client(self, client):
         """Initialize the next page request for the GraphPage
 
         Args:
@@ -95,5 +118,4 @@ class GraphPage(UserList):
             client (:class:`GraphClient<msgraph.model.graph_client.GraphClient>`:
                 The client to be used for the request
         """
-        self._next_page_link = next_page_link
-        self._next_page_request = GraphRequest(next_page_link, client)
+        self._next_page_request = GraphRequest(self._next_page_link, client)

@@ -5,7 +5,7 @@ from __future__ import generators
 from __future__ import unicode_literals
 from .version import __version__
 from .options import *
-from .graph_object_base import GraphObjectBase
+from .model.odata_object_base import OdataObjectBase
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 
@@ -96,18 +96,10 @@ class RequestBase(object):
             self._query_options[option.key] = option.value
 
     def send(self, content=None, path=None):
-        """Send the request using the client specified
-        at request initialization
-
-        Args:
-            content (str): Defaults to None, the body of the request
-                that will be sent
-            path (str): Defaults to None, the local path of the file which
-                will be sent
-
-        Returns:
-            :class:`HttpResponse<microsoft.http_response.HttpResponse>`:
-                The response to the request
+        """Send the request using the client specified at request initialization.
+        :param content:str: Defaults to None, the body of the request that will be sent
+        :param path:str: Defaults to None, the local path of the file which will be sent
+        :return HttpResponse: The response to the request
         """
         self._client.auth_provider.authenticate_request(self)
 
@@ -126,10 +118,13 @@ class RequestBase(object):
             content_dict = None
 
             if content:
-                if isinstance(content, GraphObjectBase):
-                    content_dict = content.to_dict()
+                if isinstance(content, OdataObjectBase):
+                    content_dict = content.serialized()
+                elif not isinstance(content, dict):
+                    raise ValueError("Request body must be JSON serializable.")
                 else:
                     content_dict = content
+                print("CONTENT: " + str(content_dict))
 
             self._response = self._client.http_provider.send(self._method,
                                                              self._headers,

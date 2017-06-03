@@ -75,3 +75,7 @@ class GraphClient(object):
     def get_object(self, api_call):
         page = GraphRequest(self.base_url + api_call, self).get()
         return next(page.objects())
+
+    def create_object_request(self, api_call, odata_object):
+        page = GraphRequest(self.base_url + api_call, self).post(odata_object)
+        return next(page.objects())
