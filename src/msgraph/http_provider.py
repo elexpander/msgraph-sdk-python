@@ -47,10 +47,11 @@ class HttpProvider(HttpProviderBase):
                                        data=data,
                                        json=content)
             prepped = request.prepare()
-            print("http_provider:")
-            print(prepped.method)
-            print(prepped.headers)
-            print(prepped.body)
+
+            print("HTTP PROVIDER: " + method + " " + url)
+            print("HTTP PROVIDER headers: " + str(headers))
+            print("HTTP PROVIDER data: " + str(data))
+            print("HTTP PROVIDER content: " + str(content))
             response = session.send(prepped)
 
         custom_response = HttpResponse(response.status_code, response.headers, response.text)

@@ -66,16 +66,44 @@ class GraphClient(object):
     def base_url(self, value):
         self._base_url = value
 
-    def request(self, api_call):
-        return GraphRequest(self.base_url + api_call, self)
+    def request(self, api_resource):
+        """Creates API request.
+        :param api_resource: API resource.
+        :type api_resource: string.
+        :rtype: GraphRequest object.
+        """
+        return GraphRequest(self.base_url + api_resource, self)
 
-    def get_page(self, api_call):
-        return GraphRequest(self.base_url + api_call, self).get()
+    def send_request(self, api_resource, content=None):
+        """Returns page returned by API request.
+        :param api_resource: API resource.
+        :type api_resource: string.
+        :param content: JSON serializable content to send to a POST request.
+        :type content: OdataBaseObject or dictionary.
+        :rtype: GraphPage object.
+        """
+        request = self.request(api_resource)
+        if content:
+            return request.post(content)
+        else:
+            return request.get()
 
-    def get_object(self, api_call):
-        page = GraphRequest(self.base_url + api_call, self).get()
+    def get_object(self, api_resource):
+        """Returns first object in page returned by API request.
+        :param api_resource: API resource.
+        :type api_resource: string.
+        :rtype: OdataObjectBase object.
+        """
+        page = self.send_request(api_resource)
         return next(page.objects())
 
-    def create_object_request(self, api_call, odata_object):
-        page = GraphRequest(self.base_url + api_call, self).post(odata_object)
+    def create_object_request(self, api_resource, graph_object):
+        """Sends a POST request to the specified resource with the specified body and
+        returns object returned by API request.
+        :param api_resource: API resource.
+        :type api_resource: string.
+        :param graph_object: Request body content.
+        :type graph_object: OdataBaseObject or dictionary.
+        :rtype: OdataObjectBase object"""
+        page = self.send_request(api_resource, graph_object)
         return next(page.objects())
