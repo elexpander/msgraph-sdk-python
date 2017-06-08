@@ -74,7 +74,7 @@ class GraphClient(object):
         """
         return GraphRequest(self.base_url + api_resource, self)
 
-    def send_request(self, api_resource, content=None):
+    def send_request(self, api_resource, content=None, method="GET"):
         """Returns page returned by API request.
         :param api_resource: API resource.
         :type api_resource: string.
@@ -84,9 +84,16 @@ class GraphClient(object):
         """
         request = self.request(api_resource)
         if content:
-            return request.post(content)
+            if method == "POST":
+                return request.post(content)
+            elif method == "PATCH":
+                return request.patch(content)
         else:
-            return request.get()
+            if method == "GET":
+                return request.get()
+            elif method == "DELETE":
+                return request.delete()
+        return None
 
     def get_object(self, api_resource):
         """Returns first object in page returned by API request.
@@ -94,10 +101,10 @@ class GraphClient(object):
         :type api_resource: string.
         :rtype: OdataObjectBase object.
         """
-        page = self.send_request(api_resource)
+        page = self.send_request(api_resource, method="GET")
         return next(page.objects())
 
-    def create_object_request(self, api_resource, graph_object):
+    def create_object(self, api_resource, graph_object):
         """Sends a POST request to the specified resource with the specified body and
         returns object returned by API request.
         :param api_resource: API resource.
@@ -105,5 +112,12 @@ class GraphClient(object):
         :param graph_object: Request body content.
         :type graph_object: OdataBaseObject or dictionary.
         :rtype: OdataObjectBase object"""
-        page = self.send_request(api_resource, graph_object)
+        page = self.send_request(api_resource, graph_object, method="POST")
         return next(page.objects())
+
+    def update_object(self, api_resource, content):
+        self.send_request(api_resource, content, method="PATCH")
+
+    def delete_object(self, api_resource):
+        self.send_request(api_resource, method="DELETE")
+

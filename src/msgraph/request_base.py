@@ -115,22 +115,20 @@ class RequestBase(object):
                                                              self._request_url,
                                                              path=path)
         else:
-            content_dict = None
+            conent_dict = None
 
             if content:
                 if isinstance(content, OdataObjectBase):
-                    content_dict = content.serialized()
-                elif not isinstance(content, dict):
-                    raise ValueError("Request body must be JSON serializable.")
+                    conent_dict = content.serialized()
+                elif isinstance(content, dict):
+                    conent_dict = content
                 else:
-                    content_dict = content
-                print("CONTENT: " + str(content_dict))
+                    raise ValueError("Request body must be JSON serializable.")
 
             self._response = self._client.http_provider.send(self._method,
                                                              self._headers,
                                                              self._request_url,
-                                                             content=content_dict)
-
+                                                             content=conent_dict)
         return self._response
 
     def download_item(self, path):

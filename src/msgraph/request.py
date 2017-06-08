@@ -19,6 +19,15 @@ class GraphRequest(RequestBase):
         """
         super().__init__(request_url, client, None)
 
+    def append_to_request_url(self, url_segment):
+        """Appends a URL portion to the current request URL
+
+        Args:
+            url_segment (str): The segment you would like to append
+                to the existing request URL.
+        """
+        return self._request_url + "/" + url_segment
+
     def get(self):
         """Gets the GraphPage
 
@@ -45,6 +54,16 @@ class GraphRequest(RequestBase):
             page.set_next_page_request_client(self._client)
 
         return page
+
+    def patch(self, data_dict):
+        """Sends PATCH request."""
+        self.method = "PATCH"
+        self.send(data_dict)
+
+    def delete(self):
+        """Sends DELETE request."""
+        self.method = "DELETE"
+        self.send()
 
 
 class GraphResponse(object):

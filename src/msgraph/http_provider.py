@@ -41,6 +41,7 @@ class HttpProvider(HttpProviderBase):
                 prepped = request.prepare()
                 response = session.send(prepped)
         else:
+
             request = requests.Request(method,
                                        url,
                                        headers=headers,
