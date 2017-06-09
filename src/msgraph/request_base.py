@@ -115,20 +115,20 @@ class RequestBase(object):
                                                              self._request_url,
                                                              path=path)
         else:
-            conent_dict = None
+            content_dict = None
 
             if content:
                 if isinstance(content, OdataObjectBase):
-                    conent_dict = content.serialized()
+                    content_dict = content.serialized()
                 elif isinstance(content, dict):
-                    conent_dict = content
+                    content_dict = content
                 else:
                     raise ValueError("Request body must be JSON serializable.")
 
             self._response = self._client.http_provider.send(self._method,
                                                              self._headers,
-                                                             self._request_url,
-                                                             content=conent_dict)
+                                                             self.request_url,
+                                                             content=content_dict)
         return self._response
 
     def download_item(self, path):
@@ -156,7 +156,7 @@ class RequestBase(object):
 
         return response
 
-    def set_query_options(self, expand=None, select=None, top=None, order_by=None):
+    def set_query_options(self, expand=None, select=None, filter=None, top=None, order_by=None, count=False):
         """Adds query options from a set of known parameters
 
         Args:
@@ -164,9 +164,11 @@ class RequestBase(object):
                 to expand in the response.
             select (str): Default None, comma-seperated list of properties to
                 include in the response.
+            filter (str): Default None, an odata compliant filter
             top (int): Default None, the number of items to return in a result.
             order_by (str): Default None, comma-seperated list of properties
                 that are used to sort the order of items in the response.
+            count (bool): Default to False, set to True to get count of objects in result.
         """
         if expand:
             self.append_option(QueryOption("$expand", expand))
@@ -174,8 +176,14 @@ class RequestBase(object):
         if select:
             self.append_option(QueryOption("$select", select))
 
+        if filter:
+            self.append_option(QueryOption("$filter", filter))
+
         if top:
-            self.append_option(QueryOption("$top", top))
+            self.append_option(QueryOption("$top", str(top)))
 
         if order_by:
             self.append_option(QueryOption("$orderby", order_by))
+
+        if count:
+            self.append_option(QueryOption("$count", "true"))

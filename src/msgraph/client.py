@@ -74,35 +74,39 @@ class GraphClient(object):
         """
         return GraphRequest(self.base_url + api_resource, self)
 
-    def send_request(self, api_resource, content=None, method="GET"):
-        """Returns page returned by API request.
+    def get_page(self, api_resource, select=None, filter=None, top=None, order_by=None, count=None):
+        """Returns page of objects returned by API request.
         :param api_resource: API resource.
         :type api_resource: string.
-        :param content: JSON serializable content to send to a POST request.
-        :type content: OdataBaseObject or dictionary.
         :rtype: GraphPage object.
         """
         request = self.request(api_resource)
-        if content:
-            if method == "POST":
-                return request.post(content)
-            elif method == "PATCH":
-                return request.patch(content)
-        else:
-            if method == "GET":
-                return request.get()
-            elif method == "DELETE":
-                return request.delete()
-        return None
+        request.set_query_options(select=select, filter=filter, top=top, order_by=order_by, count=count)
 
-    def get_object(self, api_resource):
+        return request.get()
+
+    def get_object(self, api_resource, select=None):
         """Returns first object in page returned by API request.
+        :param api_resource: API resource.
+        :type api_resource: string.
+        :param select: Comma separataed list of properties to get.
+        :type select: string.
+        :rtype: OdataObjectBase object.
+        """
+        request = self.request(api_resource)
+        request.set_query_options(select=select)
+
+        page = request.get()
+        return next(page.objects())
+
+    def get_value(self, api_resource):
+        """Returns the value of the property requested by parameter.
         :param api_resource: API resource.
         :type api_resource: string.
         :rtype: OdataObjectBase object.
         """
-        page = self.send_request(api_resource, method="GET")
-        return next(page.objects())
+        request = self.request("{}/$value".format(api_resource))
+        return request.get_value()
 
     def create_object(self, api_resource, graph_object):
         """Sends a POST request to the specified resource with the specified body and
@@ -112,12 +116,15 @@ class GraphClient(object):
         :param graph_object: Request body content.
         :type graph_object: OdataBaseObject or dictionary.
         :rtype: OdataObjectBase object"""
-        page = self.send_request(api_resource, graph_object, method="POST")
+        request = self.request(api_resource)
+        page = request.post(graph_object)
+
         return next(page.objects())
 
     def update_object(self, api_resource, content):
-        self.send_request(api_resource, content, method="PATCH")
+        request = self.request(api_resource)
+        request.patch(content)
 
     def delete_object(self, api_resource):
-        self.send_request(api_resource, method="DELETE")
-
+        request = self.request(api_resource)
+        request.delete()

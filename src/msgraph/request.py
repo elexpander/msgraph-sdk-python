@@ -28,6 +28,13 @@ class GraphRequest(RequestBase):
         """
         return self._request_url + "/" + url_segment
 
+    def get_value(self):
+        """Gets single just the value from a property. No JSON data is returned.
+        :returns: value
+        """
+        self.method = "GET"
+        return self.send().content
+
     def get(self):
         """Gets the GraphPage
 
@@ -69,27 +76,35 @@ class GraphRequest(RequestBase):
 class GraphResponse(object):
     def __init__(self, data_dict):
         if isinstance(data_dict, dict):
-            self._data = data_dict["value"] if "value" in data_dict else [data_dict]
-            self._next_page_link = data_dict["@odata.nextLink"] if '@odata.nextLink' in data_dict else None
-            self._context = data_dict["@odata.context"] if "@odata.context" in data_dict else None
+            self._data = data_dict.get("value", data_dict)
+            self._count = data_dict.get("@odata.count")
+            self._next_page_link = data_dict.get("@odata.nextLink")
+            self._context = data_dict.get("@odata.context")
         else:
             self._data = None
+            self._count = None
             self._next_page_link = None
             self._context = None
 
     def get_page(self):
         if self._data:
-            return GraphPage(self._data, context=self._context, next_page_link=self._next_page_link)
+            return GraphPage(self._data, count=self._count, context=self._context, next_page_link=self._next_page_link)
         else:
             return None
 
 
 class GraphPage(UserList):
-    def __init__(self, graph_objects=[], context=None, next_page_link=None):
+    def __init__(self, graph_objects=[], count=None, context=None, next_page_link=None):
         super().__init__(graph_objects)
+        self._count = count
         self._context = context
         self._next_page_request = None
         self._next_page_link = next_page_link
+
+    @property
+    def api_count(self):
+        """Count returned by API when it's requested."""
+        return self._count
 
     @property
     def context(self):
@@ -106,7 +121,7 @@ class GraphPage(UserList):
     def objects(self):
         for item in self:
 
-            odata_type = item['@odata.type'] if '@odata.type' in item else None
+            odata_type = item.get('@odata.type')
             c = get_object_class(self.context, odata_type)
 
             yield c(item)
