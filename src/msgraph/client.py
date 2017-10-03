@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 # Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 # 
@@ -66,13 +65,15 @@ class GraphClient(object):
     def base_url(self, value):
         self._base_url = value
 
-    def request(self, api_resource):
+    def request(self, resource):
         """Creates API request.
-        :param api_resource: API resource.
-        :type api_resource: string.
+        :param resource: API resource.
+        :type resource: string.
         :rtype: GraphRequest object.
         """
-        return GraphRequest(self.base_url + api_resource, self)
+        if not resource.startswith(self._base_url):
+            resource = self.base_url + resource
+        return GraphRequest(resource, self)
 
     def get_page(self, api_resource, select=None, filter=None, top=None, order_by=None, count=None):
         """Returns page of objects returned by API request.

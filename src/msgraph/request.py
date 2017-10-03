@@ -36,34 +36,24 @@ class GraphRequest(RequestBase):
         return self.send().content
 
     def get(self):
-        """Gets the GraphPage
-
-        Returns: 
-            :class:`GraphPage<msgraph.request.users_collection.GraphPage>`:
-                The GraphPage
+        """Sends GET request and returns data.
+        :returns GraphPage with data returned by request.
         """
         self.method = "GET"
-
-        page = GraphResponse(json.loads(self.send().content)).get_page()
-
-        if page and page.next_page_link:
-            page.set_next_page_request_client(self._client)
-
-        return page
+        return GraphResponse(json.loads(self.send().content)).get_page()
 
     def post(self, data_dict):
-        """Sends POST request and gets the page content."""
+        """Sends POST request and gets the page content.
+        :param data_dict: dictionary with request data.
+        :returns GraphPage with data returned by request.
+        """
         self.method = "POST"
-
-        page = GraphResponse(json.loads(self.send(data_dict).content)).get_page()
-
-        if page and page.next_page_link:
-            page.set_next_page_request_client(self._client)
-
-        return page
+        return GraphResponse(json.loads(self.send(data_dict).content)).get_page()
 
     def patch(self, data_dict):
-        """Sends PATCH request."""
+        """Sends PATCH request.
+        :param data_dict: dictionary with request data.
+        """
         self.method = "PATCH"
         self.send(data_dict)
 
@@ -76,7 +66,8 @@ class GraphRequest(RequestBase):
 class GraphResponse(object):
     def __init__(self, data_dict):
         if isinstance(data_dict, dict):
-            self._data = data_dict.get("value", data_dict)
+            # Data is a collection in value or it's a single item which we convert to list of single item
+            self._data = data_dict.get("value", [data_dict])
             self._count = data_dict.get("@odata.count")
             self._next_page_link = data_dict.get("@odata.nextLink")
             self._context = data_dict.get("@odata.context")
@@ -90,7 +81,7 @@ class GraphResponse(object):
         if self._data:
             return GraphPage(self._data, count=self._count, context=self._context, next_page_link=self._next_page_link)
         else:
-            return None
+            return GraphPage(None)
 
 
 class GraphPage(UserList):
@@ -100,6 +91,11 @@ class GraphPage(UserList):
         self._context = context
         self._next_page_request = None
         self._next_page_link = next_page_link
+
+    def __getitem__(self, item):
+        object_dict = super().__getitem__(item)
+        c = get_object_class(self.context, object_dict.get('@odata.type'))
+        return c(object_dict)
 
     @property
     def api_count(self):
@@ -118,14 +114,6 @@ class GraphPage(UserList):
     def context(self, val):
         self._context = val
 
-    def objects(self):
-        for item in self:
-
-            odata_type = item.get('@odata.type')
-            c = get_object_class(self.context, odata_type)
-
-            yield c(item)
-
     @property
     def next_page_request(self):
         """Gets a request for the next page of a collection, if one exists
@@ -142,14 +130,3 @@ class GraphPage(UserList):
     @next_page_link.setter
     def next_page_link(self, value):
         self._next_page_link = value
-
-    def set_next_page_request_client(self, client):
-        """Initialize the next page request for the GraphPage
-
-        Args:
-            next_page_link (str): The URL for the next page request
-                to be sent to
-            client (:class:`GraphClient<msgraph.model.graph_client.GraphClient>`:
-                The client to be used for the request
-        """
-        self._next_page_request = GraphRequest(self._next_page_link, client)

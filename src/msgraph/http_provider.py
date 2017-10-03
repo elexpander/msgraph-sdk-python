@@ -53,6 +53,7 @@ class HttpProvider(HttpProviderBase):
             print("HTTP PROVIDER headers: " + str(headers))
             print("HTTP PROVIDER data: " + str(data))
             print("HTTP PROVIDER content: " + str(content))
+
             response = session.send(prepped)
 
         custom_response = HttpResponse(response.status_code, response.headers, response.text)

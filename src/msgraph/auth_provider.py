@@ -5,7 +5,7 @@ import json
 from .auth_provider_base import AuthProviderBase
 from .options import *
 from .session import Session
-import sys
+
 
 class AuthProvider(AuthProviderBase):
 
@@ -13,7 +13,7 @@ class AuthProvider(AuthProviderBase):
     MSA_AUTH_TOKEN_URL = "https://login.microsoft.com/common/oauth2/v2.0/token"
 
     def __init__(self, http_provider, client_id=None, scopes=None, access_token=None,
-                 session_type=None, loop=None, auth_server_url=None, auth_token_url=None):
+                 session_type=None, auth_server_url=None, auth_token_url=None):
         """Initialize the authentication provider for authenticating
         requests sent to MS Graph
 
@@ -32,10 +32,6 @@ class AuthProvider(AuthProviderBase):
                 STORES SESSIONS TO THE RUN DIRECTORY IN PLAIN TEXT.
                 THIS IS UNSAFE. IT IS HIGHLY RECOMMENDED THAT YOU
                 IMPLEMENT YOUR OWN VERSION.
-            loop (BaseEventLoop): Defaults to None, the asyncio
-                loop to use for all async requests. If none is provided,
-                asyncio.get_event_loop() will be called. If using Python
-                3.3 or below this does not need to be specified
             auth_server_url (str): URL where OAuth authentication can be performed. If
                 None, defaults to OAuth for Microsoft Account.
             auth_token_url (str): URL where OAuth token can be redeemed. If None,
