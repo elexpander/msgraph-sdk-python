@@ -78,6 +78,11 @@ class GraphClient(object):
     def get_page(self, api_resource, select=None, filter=None, top=None, order_by=None, count=None):
         """Returns page of objects returned by API request.
         :param api_resource: API resource.
+        :param select: attributes returned in results
+        :param filter: filter results by condition
+        :param top: page size for results
+        :param order_by: order results by attribute
+        :param count: return count of objects found
         :type api_resource: string.
         :rtype: GraphPage object.
         """
